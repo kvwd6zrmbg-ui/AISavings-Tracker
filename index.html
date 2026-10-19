@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AISavingsTracker — Calculate AI Automation Savings</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Instrument Sans", "ui-sans-serif", "system-ui", "sans-serif"],
+              display: ["Syne", "ui-sans-serif", "system-ui", "sans-serif"],
+              mono: ["IBM Plex Mono", "ui-monospace", "monospace"],
+            },
+            colors: {
+              ink: "#07080d",
+              panel: "#10131c",
+            },
+            boxShadow: {
+              glow: "0 0 80px -20px rgba(52, 211, 153, 0.45)",
+              card: "0 20px 60px -24px rgba(0, 0, 0, 0.7)",
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600;700&family=Syne:wght@600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+
+      body {
+        background: #07080d;
+      }
+
+      .grid-fade {
+        background-image:
+          linear-gradient(to right, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(to bottom, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 56px 56px;
+        mask-image: radial-gradient(ellipse 80% 70% at 50% 0%, black 20%, transparent 75%);
+      }
+
+      .orb {
+        filter: blur(80px);
+      }
+
+      input[type="number"]::-webkit-outer-spin-button,
+      input[type="number"]::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+      }
+
+      input[type="number"] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+      }
+
+      .result-enter {
+        animation: rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+      }
+
+      @keyframes rise {
+        from {
+          opacity: 0;
+          transform: translateY(18px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .shimmer {
+        background: linear-gradient(110deg, #34d399, #22d3ee 40%, #a78bfa 80%, #34d399);
+        background-size: 220% 100%;
+        animation: shimmer 4s linear infinite;
+      }
+
+      @keyframes shimmer {
+        to {
+          background-position: 220% 0;
+        }
+      }
+    </style>
+  </head>
+  <body class="h-full text-slate-200 antialiased">
+    <div class="relative min-h-full overflow-x-hidden">
+      <div class="pointer-events-none absolute inset-0 grid-fade"></div>
+      <div class="pointer-events-none absolute -top-24 left-1/4 h-72 w-72 rounded-full bg-emerald-500/20 orb"></div>
+      <div class="pointer-events-none absolute top-40 right-0 h-96 w-96 rounded-full bg-cyan-500/10 orb"></div>
+      <div class="pointer-events-none absolute bottom-0 left-0 h-80 w-80 rounded-full bg-violet-600/15 orb"></div>
+
+      <header class="relative z-10 mx-auto flex max-w-6xl items-center justify-between px-6 py-6">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-400/10 ring-1 ring-emerald-400/30">
+            <span class="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_16px_rgba(52,211,153,0.9)]"></span>
+          </div>
+          <div>
+            <p class="font-display text-lg font-bold tracking-tight text-white">AISavingsTracker</p>
+            <p class="text-[11px] uppercase tracking-[0.22em] text-slate-500">Automation ROI desk</p>
+          </div>
+        </div>
+        <div class="hidden items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-xs text-slate-400 sm:flex">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+          70% automation model
+        </div>
+      </header>
+
+      <main class="relative z-10 mx-auto max-w-6xl px-6 pb-20 pt-4">
+        <section class="mb-12 max-w-3xl">
+          <p class="mb-3 text-xs font-medium uppercase tracking-[0.28em] text-emerald-400/80">Executive calculator</p>
+          <h1 class="font-display text-4xl font-extrabold leading-[1.05] tracking-tight text-white sm:text-6xl">
+            Quantify the cost of
+            <span class="bg-gradient-to-r from-emerald-300 via-cyan-300 to-violet-300 bg-clip-text text-transparent">manual work.</span>
+          </h1>
+          <p class="mt-5 max-w-xl text-base leading-relaxed text-slate-400 sm:text-lg">
+            Enter monthly revenue and hours lost to repetitive tasks. We’ll show the time and capital you recover by automating 70% of that work with software.
+          </p>
+        </section>
+
+        <div class="grid items-start gap-8 lg:grid-cols-[minmax(0,0.92fr)_minmax(0,1.08fr)]">
+          <form id="calculator" class="rounded-3xl border border-white/10 bg-panel/80 p-6 shadow-card backdrop-blur-xl sm:p-8">
+            <div class="mb-8">
+              <div class="flex items-center justify-between gap-3">
+                <h2 class="font-display text-xl font-bold leading-none text-white">Business inputs</h2>
+                <span class="shrink-0 rounded-full border border-white/10 px-2.5 py-1 font-mono text-[10px] uppercase tracking-wider text-slate-500">USD</span>
+              </div>
+              <p class="mt-3 max-w-none text-sm leading-6 text-slate-400">
+                Use current run-rate figures. No estimates needed beyond these two fields.
+              </p>
+            </div>
+
+            <label class="mb-6 block">
+              <span class="mb-2 flex items-center justify-between text-sm font-medium text-slate-300">
+                Total monthly revenue
+                <span class="font-mono text-[11px] text-slate-500">01</span>
+              </span>
+              <div class="relative">
+                <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center font-mono text-slate-500">$</span>
+                <input
+                  id="revenue"
+                  type="number"
+                  min="0"
+                  step="100"
+                  inputmode="decimal"
+                  placeholder="250000"
+                  class="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-9 pr-4 font-mono text-lg text-white outline-none transition placeholder:text-slate-600 focus:border-emerald-400/50 focus:ring-2 focus:ring-emerald-400/20"
+                  required
+                />
+              </div>
+            </label>
+
+            <label class="mb-8 block">
+              <span class="mb-2 flex items-center justify-between text-sm font-medium text-slate-300">
+                Hours wasted on manual tasks / week
+                <span class="font-mono text-[11px] text-slate-500">02</span>
+              </span>
+              <div class="relative">
+                <input
+                  id="hours"
+                  type="number"
+                  min="0"
+                  step="0.5"
+                  inputmode="decimal"
+                  placeholder="40"
+                  class="w-full rounded-2xl border border-white/10 bg-black/40 py-4 pl-4 pr-16 font-mono text-lg text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-400/50 focus:ring-2 focus:ring-cyan-400/20"
+                  required
+                />
+                <span class="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-slate-500">hrs</span>
+              </div>
+            </label>
+
+            <p id="form-error" class="mb-4 hidden text-sm text-rose-400"></p>
+
+            <button
+              type="submit"
+              class="group relative w-full overflow-hidden rounded-2xl px-5 py-4 font-display text-base font-bold text-ink shadow-glow transition hover:scale-[1.01] active:scale-[0.99]"
+            >
+              <span class="absolute inset-0 shimmer"></span>
+              <span class="relative flex items-center justify-center gap-2">
+                Calculate AI savings
+                <svg class="h-4 w-4 transition group-hover:translate-x-0.5" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M3 8h10M9 4l4 4-4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </button>
+
+            <p class="mt-5 text-xs leading-relaxed text-slate-500">
+              Model: 70% of wasted hours are automated. Recovered hours are valued at your implied hourly revenue rate
+              (monthly revenue ÷ 173 working hours). This is a capacity-recovery estimate, not a guarantee of cash collected.
+            </p>
+          </form>
+
+          <section id="results" class="min-h-[28rem]">
+            <div id="empty-state" class="flex h-full min-h-[28rem] flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 bg-white/[0.02] px-8 text-center">
+              <div class="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
+                <svg class="h-6 w-6 text-slate-400" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 19V5m0 14h16M8 15l3-4 3 2 4-6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </div>
+              <p class="font-display text-xl font-semibold text-white">Awaiting your numbers</p>
+              <p class="mt-2 max-w-sm text-sm text-slate-500">The financial breakdown will appear here the moment you calculate — monthly, annual, and five-year views.</p>
+            </div>
+
+            <div id="results-panel" class="hidden space-y-4">
+              <div class="result-enter rounded-3xl border border-emerald-400/20 bg-gradient-to-br from-emerald-400/10 via-panel to-panel p-6 shadow-glow sm:p-8">
+                <p class="text-xs font-medium uppercase tracking-[0.22em] text-emerald-300/80">Recovered annual capacity</p>
+                <p id="annual-savings" class="mt-3 font-display text-5xl font-extrabold tracking-tight text-white sm:text-6xl">$0</p>
+                <p class="mt-3 text-sm text-slate-400">Estimated value of hours returned to the business each year at a 70% automation rate.</p>
+                <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                    <p class="text-[11px] uppercase tracking-wider text-slate-500">Monthly</p>
+                    <p id="monthly-savings" class="mt-1 font-mono text-lg text-emerald-300">$0</p>
+                  </div>
+                  <div class="rounded-2xl border border-white/10 bg-black/30 px-4 py-3">
+                    <p class="text-[11px] uppercase tracking-wider text-slate-500">5-year</p>
+                    <p id="five-year-savings" class="mt-1 font-mono text-lg text-cyan-300">$0</p>
+                  </div>
+                  <div class="col-span-2 rounded-2xl border border-white/10 bg-black/30 px-4 py-3 sm:col-span-1">
+                    <p class="text-[11px] uppercase tracking-wider text-slate-500">Hours / year</p>
+                    <p id="hours-year" class="mt-1 font-mono text-lg text-violet-300">0</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="result-enter grid gap-4 sm:grid-cols-2" style="animation-delay: 80ms">
+                <article class="rounded-3xl border border-white/10 bg-panel/80 p-5">
+                  <p class="text-[11px] uppercase tracking-wider text-slate-500">Time recovered / week</p>
+                  <p id="hours-week" class="mt-2 font-display text-3xl font-bold text-white">0 hrs</p>
+                  <p class="mt-2 text-sm text-slate-500">70% of current manual load, every week.</p>
+                </article>
+                <article class="rounded-3xl border border-white/10 bg-panel/80 p-5">
+                  <p class="text-[11px] uppercase tracking-wider text-slate-500">Time recovered / month</p>
+                  <p id="hours-month" class="mt-2 font-display text-3xl font-bold text-white">0 hrs</p>
+                  <p class="mt-2 text-sm text-slate-500">Equivalent to <span id="workdays" class="text-slate-300">0</span> full workdays.</p>
+                </article>
+              </div>
+
+              <div class="result-enter overflow-hidden rounded-3xl border border-white/10 bg-panel/80" style="animation-delay: 140ms">
+                <div class="border-b border-white/10 px-5 py-4">
+                  <h3 class="font-display text-lg font-bold text-white">Automated financial breakdown</h3>
+                  <p class="text-sm text-slate-500">How the estimate is constructed from your two inputs.</p>
+                </div>
+                <dl id="breakdown" class="divide-y divide-white/5">
+                  <div class="grid grid-cols-[1fr_auto] gap-4 px-5 py-3.5 text-sm">
+                    <dt class="text-slate-400">Monthly revenue</dt>
+                    <dd id="row-revenue" class="font-mono text-white">$0</dd>
+                  </div>
+                  <div class="grid grid-cols-[1fr_auto] gap-4 px-5 py-3.5 text-sm">
+                    <dt class="text-slate-400">Manual hours / week</dt>
+                    <dd id="row-hours" class="font-mono text-white">0</dd>
+                  </div>
+                  <div class="grid grid-cols-[1fr_auto] gap-4 px-5 py-3.5 text-sm">
+                    <dt class="text-slate-400">Implied hourly revenue rate</dt>
+                    <dd id="row-rate" class="font-mono text-white">$0</dd>
+                  </div>
+                  <div class="grid grid-cols-[1fr_auto] gap-4 px-5 py-3.5 text-sm">
+                    <dt class="text-slate-400">Hours still done manually (30%)</dt>
+                    <dd id="row-remaining" class="font-mono text-slate-300">0</dd>
+                  </div>
+                  <div class="grid grid-cols-[1fr_auto] gap-4 px-5 py-3.5 text-sm">
+                    <dt class="text-slate-400">Hours automated / week (70%)</dt>
+                    <dd id="row-auto-week" class="font-mono text-emerald-300">0</dd>
+                  </div>
+                  <div class="grid grid-cols-[1fr_auto] gap-4 bg-emerald-400/5 px-5 py-3.5 text-sm">
+                    <dt class="font-medium text-emerald-200">Monthly value of recovered hours</dt>
+                    <dd id="row-month-value" class="font-mono font-medium text-emerald-300">$0</dd>
+                  </div>
+                </dl>
+              </div>
+
+              <button
+                id="download-pdf"
+                type="button"
+                class="result-enter group flex w-full items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white/[0.04] px-5 py-4 font-display text-sm font-semibold tracking-wide text-white transition hover:border-emerald-400/40 hover:bg-emerald-400/10 hover:shadow-glow"
+                style="animation-delay: 200ms"
+              >
+                <svg class="h-4 w-4 text-emerald-300 transition group-hover:scale-110" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+                  <path d="M8 2v8m0 0 3-3M8 10 5 7M3 13h10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                Download PDF Report
+              </button>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js"></script>
+    <script>
+      const AUTOMATION_RATE = 0.7;
+      const HOURS_PER_WORK_MONTH = 173;
+      const WEEKS_PER_YEAR = 52;
+      const HOURS_PER_WORKDAY = 8;
+
+      const form = document.getElementById("calculator");
+      const errorEl = document.getElementById("form-error");
+      const emptyState = document.getElementById("empty-state");
+      const resultsPanel = document.getElementById("results-panel");
+      const downloadPdf = document.getElementById("download-pdf");
+      let lastReport = null;
+
+      const currency = new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD",
+        maximumFractionDigits: 0,
+      });
+
+      const hoursFmt = new Intl.NumberFormat("en-US", {
+        maximumFractionDigits: 1,
+      });
+
+      function setText(id, value) {
+        document.getElementById(id).textContent = value;
+      }
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        errorEl.classList.add("hidden");
+
+        const revenue = Number(document.getElementById("revenue").value);
+        const hoursWeek = Number(document.getElementById("hours").value);
+
+        if (!Number.isFinite(revenue) || revenue <= 0 || !Number.isFinite(hoursWeek) || hoursWeek <= 0) {
+          errorEl.textContent = "Enter a monthly revenue and weekly hours greater than zero.";
+          errorEl.classList.remove("hidden");
+          return;
+        }
+
+        const hourlyRate = revenue / HOURS_PER_WORK_MONTH;
+        const automatedWeek = hoursWeek * AUTOMATION_RATE;
+        const remainingWeek = hoursWeek - automatedWeek;
+        const hoursMonth = automatedWeek * (WEEKS_PER_YEAR / 12);
+        const hoursYear = automatedWeek * WEEKS_PER_YEAR;
+        const monthlyValue = hoursMonth * hourlyRate;
+        const annualValue = hoursYear * hourlyRate;
+        const fiveYear = annualValue * 5;
+        const workdays = hoursMonth / HOURS_PER_WORKDAY;
+
+        emptyState.classList.add("hidden");
+        resultsPanel.classList.remove("hidden");
+        resultsPanel.querySelectorAll(".result-enter").forEach((node) => {
+          node.style.animation = "none";
+          node.offsetHeight;
+          node.style.animation = "";
+        });
+
+        setText("annual-savings", currency.format(annualValue));
+        setText("monthly-savings", currency.format(monthlyValue));
+        setText("five-year-savings", currency.format(fiveYear));
+        setText("hours-year", hoursFmt.format(hoursYear));
+        setText("hours-week", hoursFmt.format(automatedWeek) + " hrs");
+        setText("hours-month", hoursFmt.format(hoursMonth) + " hrs");
+        setText("workdays", hoursFmt.format(workdays));
+        setText("row-revenue", currency.format(revenue));
+        setText("row-hours", hoursFmt.format(hoursWeek) + " hrs");
+        setText("row-rate", currency.format(hourlyRate) + "/hr");
+        setText("row-remaining", hoursFmt.format(remainingWeek) + " hrs/wk");
+        setText("row-auto-week", hoursFmt.format(automatedWeek) + " hrs/wk");
+        setText("row-month-value", currency.format(monthlyValue));
+
+        lastReport = {
+          generatedAt: new Date(),
+          revenue,
+          hoursWeek,
+          hourlyRate,
+          remainingWeek,
+          automatedWeek,
+          hoursMonth,
+          hoursYear,
+          workdays,
+          monthlyValue,
+          annualValue,
+          fiveYear,
+        };
+      });
+
+      downloadPdf.addEventListener("click", () => {
+        if (!lastReport || !window.jspdf) return;
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF({ unit: "pt", format: "letter" });
+        const pageW = doc.internal.pageSize.getWidth();
+        const margin = 48;
+        const r = lastReport;
+        const dateLabel = r.generatedAt.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        });
+
+        doc.setFillColor(7, 8, 13);
+        doc.rect(0, 0, pageW, doc.internal.pageSize.getHeight(), "F");
+
+        doc.setFillColor(52, 211, 153);
+        doc.circle(margin + 6, 52, 5, "F");
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(18);
+        doc.text("AISavingsTracker", margin + 20, 58);
+
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(10);
+        doc.setTextColor(148, 163, 184);
+        doc.text("Automation ROI report  ·  70% automation model", margin + 20, 74);
+        doc.text(dateLabel, pageW - margin, 58, { align: "right" });
+
+        doc.setDrawColor(52, 211, 153);
+        doc.setLineWidth(1);
+        doc.line(margin, 96, pageW - margin, 96);
+
+        doc.setTextColor(110, 231, 183);
+        doc.setFontSize(9);
+        doc.setFont("helvetica", "bold");
+        doc.text("RECOVERED ANNUAL CAPACITY", margin, 128);
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(32);
+        doc.text(currency.format(r.annualValue), margin, 168);
+
+        const cards = [
+          ["Monthly", currency.format(r.monthlyValue)],
+          ["5-year", currency.format(r.fiveYear)],
+          ["Hours / year", hoursFmt.format(r.hoursYear)],
+        ];
+        cards.forEach((card, i) => {
+          const x = margin + i * 172;
+          doc.setFillColor(16, 19, 28);
+          doc.roundedRect(x, 188, 160, 64, 8, 8, "F");
+          doc.setTextColor(148, 163, 184);
+          doc.setFontSize(8);
+          doc.setFont("helvetica", "bold");
+          doc.text(card[0].toUpperCase(), x + 14, 210);
+          doc.setTextColor(167, 243, 208);
+          doc.setFontSize(13);
+          doc.text(String(card[1]), x + 14, 232);
+        });
+
+        const rows = [
+          ["Monthly revenue", currency.format(r.revenue)],
+          ["Manual hours / week", hoursFmt.format(r.hoursWeek) + " hrs"],
+          ["Implied hourly revenue rate", currency.format(r.hourlyRate) + "/hr"],
+          ["Hours still done manually (30%)", hoursFmt.format(r.remainingWeek) + " hrs/wk"],
+          ["Hours automated / week (70%)", hoursFmt.format(r.automatedWeek) + " hrs/wk"],
+          ["Time recovered / month", hoursFmt.format(r.hoursMonth) + " hrs"],
+          ["Equivalent workdays / month", hoursFmt.format(r.workdays)],
+          ["Monthly value of recovered hours", currency.format(r.monthlyValue)],
+        ];
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(13);
+        doc.setFont("helvetica", "bold");
+        doc.text("Automated financial breakdown", margin, 288);
+
+        let y = 312;
+        rows.forEach((row, i) => {
+          if (i % 2 === 0) {
+            doc.setFillColor(16, 19, 28);
+            doc.roundedRect(margin, y - 14, pageW - margin * 2, 28, 4, 4, "F");
+          }
+          doc.setFont("helvetica", "normal");
+          doc.setFontSize(10);
+          doc.setTextColor(148, 163, 184);
+          doc.text(row[0], margin + 12, y);
+          doc.setTextColor(255, 255, 255);
+          doc.setFont("helvetica", "bold");
+          doc.text(row[1], pageW - margin - 12, y, { align: "right" });
+          y += 30;
+        });
+
+        doc.setTextColor(100, 116, 139);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(8);
+        const disclaimer =
+          "Model: 70% of wasted hours are automated. Recovered hours are valued at implied hourly revenue (monthly revenue ÷ 173 working hours). This is a capacity-recovery estimate, not a guarantee of cash collected.";
+        const wrapped = doc.splitTextToSize(disclaimer, pageW - margin * 2);
+        doc.text(wrapped, margin, 720);
+
+        doc.save("AISavingsTracker-report.pdf");
+      });
+    </script>
+  </body>
+</html>
