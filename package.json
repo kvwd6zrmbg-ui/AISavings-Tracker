@@ -1,0 +1,23 @@
+{
+  "name": "ai-savings-tracker",
+  "version": "1.0.0",
+  "description": "AISavingsTracker — Calculate AI Automation Savings",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kvwd6zrmbg-ui/AISavings-Tracker.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kvwd6zrmbg-ui/AISavings-Tracker/issues"
+  },
+  "homepage": "https://github.com/kvwd6zrmbg-ui/AISavings-Tracker#readme",
+  "dependencies": {
+    "@vercel/analytics": "^2.0.1"
+  }
+}
